@@ -9,62 +9,32 @@
  */
 package com.mulesoft.quartz.mongo;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
+import com.mongodb.*;
 import com.mongodb.MongoException.DuplicateKey;
-import com.mongodb.MongoOptions;
-import com.mongodb.ServerAddress;
-import com.mongodb.WriteResult;
+import org.bson.types.ObjectId;
+import org.quartz.Calendar;
+import org.quartz.*;
+import org.quartz.Trigger.CompletedExecutionInstruction;
+import org.quartz.Trigger.TriggerState;
+import org.quartz.impl.matchers.GroupMatcher;
+import org.quartz.impl.triggers.SimpleTriggerImpl;
+import org.quartz.spi.*;
+import org.quartz.utils.Key;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.bson.types.ObjectId;
-import org.quartz.Calendar;
-import org.quartz.Job;
-import org.quartz.JobBuilder;
-import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
-import org.quartz.JobKey;
-import org.quartz.JobPersistenceException;
-import org.quartz.ObjectAlreadyExistsException;
-import org.quartz.SchedulerConfigException;
-import org.quartz.SchedulerException;
-import org.quartz.SimpleTrigger;
-import org.quartz.Trigger;
-import org.quartz.Trigger.CompletedExecutionInstruction;
-import org.quartz.Trigger.TriggerState;
-import org.quartz.TriggerKey;
-import org.quartz.impl.matchers.GroupMatcher;
-import org.quartz.impl.triggers.SimpleTriggerImpl;
-import org.quartz.spi.ClassLoadHelper;
-import org.quartz.spi.JobStore;
-import org.quartz.spi.OperableTrigger;
-import org.quartz.spi.SchedulerSignaler;
-import org.quartz.spi.TriggerFiredBundle;
-import org.quartz.spi.TriggerFiredResult;
-import org.quartz.utils.Key;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.*;
 
 public class MongoDBJobStore implements JobStore {
     protected final Logger log = LoggerFactory.getLogger(getClass());
     
     private static final String JOB_KEY_NAME = "keyName";
     private static final String JOB_KEY_GROUP = "keyGroup";
+    private static final String JOB_KEY_INDEX = "keyIndex";
     private static final String JOB_DESCRIPTION = "jobDescription";
     private static final String JOB_CLASS = "jobClass";
     private static final String TRIGGER_CALENDAR_NAME = "calendarName";
@@ -74,6 +44,7 @@ public class MongoDBJobStore implements JobStore {
     private static final String TRIGGER_FIRE_INSTANCE_ID = "fireInstanceId";
     private static final String TRIGGER_KEY_NAME = "keyName";
     private static final String TRIGGER_KEY_GROUP = "keyGroup";
+    private static final String TRIGGER_KEY_INDEX = "keyIndex";
     private static final String TRIGGER_MISFIRE_INSTRUCTION = "misfireInstruction";
     private static final String TRIGGER_NEXT_FIRE_TIME = "nextFireTime";
     private static final String TRIGGER_PREVIOUS_FIRE_TIME = "previousFireTime";
@@ -143,12 +114,12 @@ public class MongoDBJobStore implements JobStore {
         BasicDBObject keys = new BasicDBObject();
         keys.put(JOB_KEY_NAME, 1);
         keys.put(JOB_KEY_GROUP, 1);
-        jobCollection.ensureIndex(keys, null, true);
+        jobCollection.ensureIndex(keys, JOB_KEY_INDEX, true);
         
         keys = new BasicDBObject();
         keys.put(TRIGGER_KEY_NAME, 1);
         keys.put(TRIGGER_KEY_GROUP, 1);
-        triggerCollection.ensureIndex(keys, null, true);
+        triggerCollection.ensureIndex(keys, TRIGGER_KEY_INDEX, true);
 
         keys = new BasicDBObject();
         keys.put(LOCK_KEY_NAME, 1);
