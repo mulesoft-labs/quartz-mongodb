@@ -1,35 +1,13 @@
 package com.mulesoft.quartz.mongo;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.quartz.SimpleScheduleBuilder.repeatSecondlyForTotalCount;
-import static org.quartz.SimpleScheduleBuilder.repeatSecondlyForever;
-import static org.quartz.TriggerBuilder.newTrigger;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
-
-import java.lang.reflect.Field;
-import java.net.UnknownHostException;
-import java.util.Date;
-import java.util.Properties;
-
 import junit.framework.Assert;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.quartz.Job;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
+import org.quartz.*;
 import org.quartz.Trigger.CompletedExecutionInstruction;
 import org.quartz.core.QuartzScheduler;
 import org.quartz.core.QuartzSchedulerResources;
@@ -37,6 +15,17 @@ import org.quartz.impl.StdScheduler;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.spi.JobStore;
 import org.quartz.spi.OperableTrigger;
+
+import java.lang.reflect.Field;
+import java.net.UnknownHostException;
+import java.util.Date;
+import java.util.Properties;
+
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.*;
+import static org.quartz.SimpleScheduleBuilder.repeatSecondlyForTotalCount;
+import static org.quartz.SimpleScheduleBuilder.repeatSecondlyForever;
+import static org.quartz.TriggerBuilder.newTrigger;
 
 /*
  * $Id$
@@ -49,6 +38,12 @@ import org.quartz.spi.OperableTrigger;
  */
 
 public class SchedulerIntegrationTest extends Assert {
+
+    private static final String MONGO_HOST = System.getProperty("mongo.db.host","127.0.0.1");
+    private static final int MONGO_PORT = Integer.parseInt(System.getProperty("mongo.db.port","27017"));
+    private static final String MONGO_DATABASE = System.getProperty("mongo.db.name","quartz");
+    private static final String MONGO_USER = System.getProperty("mongo.db.user");
+    private static final String MONGO_PASSWORD = System.getProperty("mongo.db.password");
 
     public static int COUNTER = 0;
 
@@ -130,8 +125,12 @@ public class SchedulerIntegrationTest extends Assert {
     }
 
     protected void resetMongo() throws UnknownHostException {
-        mongo = new Mongo("localhost");
-        DB db = mongo.getDB("quartz");
+        Mongo mongo = new Mongo(MONGO_HOST, MONGO_PORT);
+        DB db = mongo.getDB(MONGO_DATABASE);
+        if (MONGO_USER != null) {
+            db.authenticate(MONGO_USER, MONGO_PASSWORD.toCharArray());
+        }
+
         jobCollection = db.getCollection("test_jobs");
         jobCollection.drop();
         triggerCollection = db.getCollection("test_triggers");
