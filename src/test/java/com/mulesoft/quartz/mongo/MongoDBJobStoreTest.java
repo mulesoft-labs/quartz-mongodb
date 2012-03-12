@@ -49,6 +49,8 @@ public class MongoDBJobStoreTest extends Assert {
         store = new MongoDBJobStore();
         store.setInstanceName("test");
         store.setDbName(MONGO_DATABASE);
+        store.setUsername(MONGO_USER);
+        store.setPassword(MONGO_PASSWORD);
         store.setAddresses(String.format("%s:%d",MONGO_HOST, MONGO_PORT));
         store.initialize(new SimpleClassLoadHelper(), null);
     }
