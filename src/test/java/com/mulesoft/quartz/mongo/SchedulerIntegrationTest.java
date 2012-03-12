@@ -39,11 +39,11 @@ import static org.quartz.TriggerBuilder.newTrigger;
 
 public class SchedulerIntegrationTest extends Assert {
 
-    private static final String MONGO_HOST = System.getProperty("mongo.db.host","127.0.0.1");
-    private static final int MONGO_PORT = Integer.parseInt(System.getProperty("mongo.db.port","27017"));
-    private static final String MONGO_DATABASE = System.getProperty("mongo.db.name","quartz");
-    private static final String MONGO_USER = System.getProperty("mongo.db.user");
-    private static final String MONGO_PASSWORD = System.getProperty("mongo.db.password");
+    private String MONGO_HOST = System.getProperty("mongo.db.host","127.0.0.1");
+    private int MONGO_PORT = Integer.parseInt(System.getProperty("mongo.db.port","27017"));
+    private String MONGO_DATABASE = System.getProperty("mongo.db.name","quartz");
+    private String MONGO_USER = System.getProperty("mongo.db.user");
+    private String MONGO_PASSWORD = System.getProperty("mongo.db.password");
 
     public static int COUNTER = 0;
 
@@ -108,11 +108,13 @@ public class SchedulerIntegrationTest extends Assert {
         StdSchedulerFactory factory = new StdSchedulerFactory();
         Properties props = new Properties();
         props.put(StdSchedulerFactory.PROP_JOB_STORE_CLASS, MongoDBJobStore.class.getName());
-        props.put(StdSchedulerFactory.PROP_JOB_STORE_PREFIX + ".addresses", "localhost");
-        props.put(StdSchedulerFactory.PROP_JOB_STORE_PREFIX + ".dbName", "quartz");
+        props.put(StdSchedulerFactory.PROP_JOB_STORE_PREFIX + ".addresses", String.format("%s:%d",MONGO_HOST,MONGO_PORT));
+        props.put(StdSchedulerFactory.PROP_JOB_STORE_PREFIX + ".dbName", MONGO_DATABASE);
         props.put(StdSchedulerFactory.PROP_JOB_STORE_PREFIX + ".collectionPrefix", "test");
         props.put(StdSchedulerFactory.PROP_THREAD_POOL_PREFIX + ".threadCount", "1");
-        
+        props.put(StdSchedulerFactory.PROP_JOB_STORE_PREFIX + ".username", MONGO_USER);
+        props.put(StdSchedulerFactory.PROP_JOB_STORE_PREFIX + ".password", MONGO_PASSWORD);
+
         factory.initialize(props);
         Scheduler scheduler = factory.getScheduler();
         
