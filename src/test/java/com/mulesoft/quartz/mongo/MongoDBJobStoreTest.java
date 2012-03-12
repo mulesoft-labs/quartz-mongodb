@@ -1,13 +1,6 @@
 package com.mulesoft.quartz.mongo;
-import static org.quartz.SimpleScheduleBuilder.repeatMinutelyForever;
-import static org.quartz.TriggerBuilder.newTrigger;
-
 import com.mongodb.DB;
 import com.mongodb.Mongo;
-import com.mulesoft.quartz.mongo.MongoDBJobStore;
-
-import java.util.Date;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,6 +9,11 @@ import org.quartz.JobDetail;
 import org.quartz.ObjectAlreadyExistsException;
 import org.quartz.simpl.SimpleClassLoadHelper;
 import org.quartz.spi.OperableTrigger;
+
+import java.util.Date;
+
+import static org.quartz.SimpleScheduleBuilder.repeatMinutelyForever;
+import static org.quartz.TriggerBuilder.newTrigger;
 
 /*
  * $Id$
@@ -29,20 +27,29 @@ import org.quartz.spi.OperableTrigger;
 
 public class MongoDBJobStoreTest extends Assert {
 
+    private static final String MONGO_HOST = System.getProperty("mongo.db.host","127.0.0.1");
+    private static final int MONGO_PORT = Integer.parseInt(System.getProperty("mongo.db.port","27017"));
+    private static final String MONGO_DATABASE = System.getProperty("mongo.db.name","quartz");
+    private static final String MONGO_USER = System.getProperty("mongo.db.user");
+    private static final String MONGO_PASSWORD = System.getProperty("mongo.db.password");
+
     private MongoDBJobStore store;
 
     @Before
     public void setUpJobStore() throws Exception {
-        Mongo mongo = new Mongo("localhost");
-        DB db = mongo.getDB("quartz");
+        Mongo mongo = new Mongo(MONGO_HOST, MONGO_PORT);
+        DB db = mongo.getDB(MONGO_DATABASE);
+        if (MONGO_USER != null) {
+            db.authenticate(MONGO_USER, MONGO_PASSWORD.toCharArray());
+        }
         db.getCollection("quartz_jobs").drop();
         db.getCollection("quartz_triggers").drop();
         db.getCollection("quartz_locks").drop();
         
         store = new MongoDBJobStore();
         store.setInstanceName("test");
-        store.setDbName("quartz");
-        store.setAddresses("localhost");
+        store.setDbName(MONGO_DATABASE);
+        store.setAddresses(String.format("%s:%d",MONGO_HOST, MONGO_PORT));
         store.initialize(new SimpleClassLoadHelper(), null);
     }
     

@@ -1,4 +1,10 @@
-/target
-/.settings
-/.classpath
-/.project
+.classpath
+.metadata
+.project
+.settings
+target/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+.idea/
