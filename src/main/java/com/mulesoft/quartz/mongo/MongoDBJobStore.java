@@ -17,6 +17,7 @@ import org.quartz.*;
 import org.quartz.Trigger.CompletedExecutionInstruction;
 import org.quartz.Trigger.TriggerState;
 import org.quartz.impl.matchers.GroupMatcher;
+import org.quartz.impl.triggers.CronTriggerImpl;
 import org.quartz.impl.triggers.SimpleTriggerImpl;
 import org.quartz.spi.*;
 import org.quartz.utils.Key;
@@ -27,6 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.UnknownHostException;
+import java.text.ParseException;
 import java.util.*;
 
 public class MongoDBJobStore implements JobStore {
@@ -55,6 +57,7 @@ public class MongoDBJobStore implements JobStore {
     private static final String SIMPLE_TRIGGER_REPEAT_COUNT = "repeatCount";
     private static final String SIMPLE_TRIGGER_REPEAT_INTERVAL = "repeatInterval";
     private static final String SIMPLE_TRIGGER_TIMES_TRIGGERED = "timesTriggered";
+    private static final String CRON_TRIGGER_CRON_EXPRESSION = "cronEx";
     private static final String CALENDAR_NAME = "name";
     private static final String CALENDAR_SERIALIZED_OBJECT = "serializedObject";
     private static final String LOCK_KEY_NAME = "keyName";
@@ -189,6 +192,14 @@ public class MongoDBJobStore implements JobStore {
             triggerDB.put(SIMPLE_TRIGGER_REPEAT_COUNT, simple.getRepeatCount());
             triggerDB.put(SIMPLE_TRIGGER_REPEAT_INTERVAL, simple.getRepeatInterval());
             triggerDB.put(SIMPLE_TRIGGER_TIMES_TRIGGERED, simple.getTimesTriggered());
+        }
+        if (newTrigger instanceof CronTrigger) {
+            //
+            // for CronTrigger, it need to record its cron expression. Without that, the next_fire_time cannot be
+            // calculated. It cause the trigger being deleted after its first fire.
+            //
+            CronTrigger simple = (CronTrigger) newTrigger;
+            triggerDB.put(CRON_TRIGGER_CRON_EXPRESSION, simple.getCronExpression());
         }
         try {
             triggerCollection.insert(triggerDB);
@@ -377,6 +388,17 @@ public class MongoDBJobStore implements JobStore {
         trigger.setPriority((Integer)dbObject.get(TRIGGER_PRIORITY));
         trigger.setStartTime((Date)dbObject.get(TRIGGER_START_TIME));
 
+        if (trigger instanceof CronTriggerImpl) {
+            CronTriggerImpl simple = (CronTriggerImpl) trigger;
+            Object cronEx = dbObject.get(CRON_TRIGGER_CRON_EXPRESSION);
+            if (cronEx != null) {
+                try {
+                    simple.setCronExpression((String)cronEx);
+                } catch (ParseException e) {
+                    throw new JobPersistenceException("Could not populate cron expression " + cronEx);
+                }
+            }
+        }
         if (trigger instanceof SimpleTriggerImpl) {
             SimpleTriggerImpl simple = (SimpleTriggerImpl) trigger;
             Object repeatCount = dbObject.get(SIMPLE_TRIGGER_REPEAT_COUNT);
