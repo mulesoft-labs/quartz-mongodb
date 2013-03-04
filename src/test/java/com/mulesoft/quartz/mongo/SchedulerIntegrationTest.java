@@ -112,9 +112,11 @@ public class SchedulerIntegrationTest extends Assert {
         props.put(StdSchedulerFactory.PROP_JOB_STORE_PREFIX + ".dbName", MONGO_DATABASE);
         props.put(StdSchedulerFactory.PROP_JOB_STORE_PREFIX + ".collectionPrefix", "test");
         props.put(StdSchedulerFactory.PROP_THREAD_POOL_PREFIX + ".threadCount", "1");
-        props.put(StdSchedulerFactory.PROP_JOB_STORE_PREFIX + ".username", MONGO_USER);
-        props.put(StdSchedulerFactory.PROP_JOB_STORE_PREFIX + ".password", MONGO_PASSWORD);
-
+        if (MONGO_USER != null && MONGO_PASSWORD != null) {
+        	props.put(StdSchedulerFactory.PROP_JOB_STORE_PREFIX + ".username", MONGO_USER);
+       		props.put(StdSchedulerFactory.PROP_JOB_STORE_PREFIX + ".password", MONGO_PASSWORD);
+        }
+        
         factory.initialize(props);
         Scheduler scheduler = factory.getScheduler();
         
