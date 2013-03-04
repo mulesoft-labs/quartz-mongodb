@@ -4,11 +4,30 @@
     <groupId>com.mulesoft.quartz</groupId>
     <artifactId>quartz-mongodb</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <properties>
+        <maven-compiler-plugin.version>3.0</maven-compiler-plugin.version>
+        <java.version>1.5</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    <build>
+        <plugins>
+            <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                   <source>${java.version}</source>
+                   <target>${java.version}</target>
+                   <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
     <dependencies>
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
-            <version>2.1.0</version><!-- 2.1.3 causes some test failures. -->
+            <version>2.1.6</version>
         </dependency>
         <dependency>
             <groupId>org.mongodb</groupId>
