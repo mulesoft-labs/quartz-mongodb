@@ -291,6 +291,10 @@ public class MongoDBJobStore implements JobStore {
     public JobDetail retrieveJob(JobKey jobKey) throws JobPersistenceException {
         DBObject dbObject = retrieveJobDBObject(jobKey);
         
+        if (dbObject == null) {
+            return null;
+        }
+        
         try {
             Class<Job> jobClass = (Class<Job>) loadHelper.getClassLoader().loadClass((String)dbObject.get(JOB_CLASS));
             
